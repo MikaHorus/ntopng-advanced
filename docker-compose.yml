@@ -1,0 +1,37 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ntopng-advanced-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME: ${APP_NAME:-ntopng-history-viewer}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
+      API_V1_PREFIX: ${API_V1_PREFIX:-/api/v1}
+      NTOPNG_BASE_URL: ${NTOPNG_BASE_URL:?NTOPNG_BASE_URL must be set in .env}
+      NTOPNG_USERNAME: ${NTOPNG_USERNAME:-}
+      NTOPNG_PASSWORD: ${NTOPNG_PASSWORD:-}
+      NTOPNG_API_KEY: ${NTOPNG_API_KEY:?NTOPNG_API_KEY must be set in .env}
+      NTOPNG_VERIFY_SSL: ${NTOPNG_VERIFY_SSL:-false}
+      NTOPNG_INTERFACE_ID: ${NTOPNG_INTERFACE_ID:-}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ntopng-advanced-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "85:80"
