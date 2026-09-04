@@ -24,6 +24,7 @@ import {
   type InterfaceSummary,
   type PaginatedResponse,
 } from "./api";
+import NavigationHistory from "./NavigationHistory";
 
 type InterfaceData = Record<string, unknown>;
 
@@ -77,6 +78,10 @@ const App = () => {
 
   const bytesUpload = numberValue(interfaceData.bytes_upload);
   const bytesDownload = numberValue(interfaceData.bytes_download);
+  const domainRows = (flows?.items ?? [])
+    .map((row) => String(row.domain ?? (row.server as { name?: string } | undefined)?.name ?? ""))
+    .filter(Boolean)
+    .map((domain) => ({ domain }));
 
   return (
     <div className="app-shell">
@@ -88,6 +93,7 @@ const App = () => {
         <div className="side-label">Surveillance</div>
         <nav>
           <a className="nav-item active" href="#dashboard"><CircleGauge size={18} /> Dashboard</a>
+          <a className="nav-item" href="#history"><Database size={18} /> Historique</a>
           <a className="nav-item" href="#hosts"><MonitorSmartphone size={18} /> Machines <ChevronRight size={15} /></a>
           <a className="nav-item" href="#flows"><Waypoints size={18} /> Flows actifs <ChevronRight size={15} /></a>
           <a className="nav-item" href="#domains"><Globe2 size={18} /> Domaines <ChevronRight size={15} /></a>
@@ -141,6 +147,8 @@ const App = () => {
           <DataTable id="hosts" title="Machines actives" subtitle="Présences détectées par ntopng" rows={hosts?.items ?? []} type="hosts" />
           <DataTable id="flows" title="Flows actifs" subtitle="Connexions en cours" rows={flows?.items ?? []} type="flows" />
         </section>
+        <NavigationHistory />
+        <DataTable id="domains" title="Domaines détectés" subtitle="Domaines présents dans les flows actifs" rows={domainRows} type="domains" />
         <footer className="page-footer">Ntopng Advanced <span>•</span> données fournies par l’instance ntopng configurée</footer>
       </main>
     </div>
@@ -150,6 +158,6 @@ const App = () => {
 const Metric = ({ icon, label, value, accent }: { icon: ReactNode; label: string; value: string | number; accent: string }) => <div className={`metric-card ${accent}`}><div className="metric-icon">{icon}</div><div><span>{label}</span><strong>{value}</strong></div><div className="metric-arrow">↗</div></div>;
 const Detail = ({ label, value }: { label: string; value: string }) => <div className="detail-row"><span>{label}</span><strong>{value}</strong></div>;
 
-const DataTable = ({ id, title, subtitle, rows, type }: { id: string; title: string; subtitle: string; rows: Record<string, unknown>[]; type: "hosts" | "flows" }) => <div className="panel table-panel" id={id}><div className="panel-heading"><div><h2>{title}</h2><span className="panel-subtitle">{subtitle}</span></div><span className="count-badge">{rows.length} affichés</span></div>{rows.length === 0 ? <div className="empty-state">Aucune donnée actuellement disponible.</div> : <div className="table-scroll"><table><thead><tr>{type === "hosts" ? <><th>Adresse IP</th><th>Nom</th><th>Trafic</th></> : <><th>Client</th><th>Serveur</th><th>Protocole</th><th>Octets</th></>}</tr></thead><tbody>{rows.map((row, index) => type === "hosts" ? <tr key={index}><td className="mono">{String(row.ip ?? "—")}</td><td>{String(row.name || "Non résolu")}</td><td>{numberValue((row.bytes as { total?: number } | undefined)?.total)}</td></tr> : <tr key={index}><td className="mono">{String((row.client as { ip?: string } | undefined)?.ip ?? "—")}</td><td className="mono">{String((row.server as { ip?: string } | undefined)?.ip ?? "—")}</td><td><span className="protocol">{String((row.protocol as { l7?: string } | undefined)?.l7 ?? "—")}</span></td><td>{numberValue(row.bytes)}</td></tr>)}</tbody></table></div>}</div>;
+const DataTable = ({ id, title, subtitle, rows, type }: { id: string; title: string; subtitle: string; rows: Record<string, unknown>[]; type: "hosts" | "flows" | "domains" }) => <div className="panel table-panel" id={id}><div className="panel-heading"><div><h2>{title}</h2><span className="panel-subtitle">{subtitle}</span></div><span className="count-badge">{rows.length} affichés</span></div>{rows.length === 0 ? <div className="empty-state">Aucune donnée actuellement disponible.</div> : <div className="table-scroll"><table><thead><tr>{type === "hosts" ? <><th>Adresse IP</th><th>Nom</th><th>Trafic</th></> : type === "domains" ? <th>Domaine</th> : <><th>Client</th><th>Serveur</th><th>Protocole</th><th>Octets</th></>}</tr></thead><tbody>{rows.map((row, index) => type === "hosts" ? <tr key={index}><td className="mono">{String(row.ip ?? "—")}</td><td>{String(row.name || "Non résolu")}</td><td>{numberValue((row.bytes as { total?: number } | undefined)?.total)}</td></tr> : type === "domains" ? <tr key={index}><td className="mono">{String(row.domain)}</td></tr> : <tr key={index}><td className="mono">{String((row.client as { ip?: string } | undefined)?.ip ?? "—")}</td><td className="mono">{String((row.server as { ip?: string } | undefined)?.ip ?? "—")}</td><td><span className="protocol">{String((row.protocol as { l7?: string } | undefined)?.l7 ?? "—")}</span></td><td>{numberValue(row.bytes)}</td></tr>)}</tbody></table></div>}</div>;
 
 export default App;

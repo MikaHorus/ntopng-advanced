@@ -10,6 +10,22 @@ export type PaginatedResponse = {
   total: number | null;
 };
 
+export type NavigationHistoryItem = {
+  id: number;
+  timestamp: string;
+  local_ip: string;
+  hostname: string | null;
+  domain: string;
+};
+
+export type NavigationHistoryResponse = {
+  items: NavigationHistoryItem[];
+  page: number;
+  page_size: number;
+  total: number;
+  total_pages: number;
+};
+
 const request = async <T>(path: string): Promise<T> => {
   const response = await fetch(path);
   if (!response.ok) {
@@ -35,3 +51,18 @@ export const getFlows = (interfaceId: number) =>
   request<PaginatedResponse>(
     `/api/v1/ntopng/flows?ifid=${interfaceId}&page=1&page_size=8`,
   );
+
+export const getNavigationHistory = (options: {
+  page: number;
+  pageSize: number;
+  search?: string;
+}) => {
+  const params = new URLSearchParams({
+    page: String(options.page),
+    page_size: String(options.pageSize),
+  });
+  if (options.search) params.set("search", options.search);
+  return request<NavigationHistoryResponse>(
+    `/api/v1/navigation-history?${params.toString()}`,
+  );
+};

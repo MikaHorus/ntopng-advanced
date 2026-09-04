@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     ntopng_api_key: str = ""
     ntopng_verify_ssl: bool = False
     ntopng_interface_id: str = ""
+    database_url: str = "postgresql+asyncpg://ntopng:ntopng@postgres:5432/ntopng"
+    sync_interval_seconds: int = 60
 
     model_config = SettingsConfigDict(
         env_file=(".env", "../.env"),
