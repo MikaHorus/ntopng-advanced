@@ -1,14 +1,24 @@
+from __future__ import annotations
+
 import hashlib
+from collections.abc import AsyncIterator
+from io import BytesIO
 from datetime import datetime, timezone
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.clients.ntopng_client import NtopngClient
 from app.models import NavigationHistory, SyncState
 from app.repositories.navigation_history import NavigationHistoryRepository
+
+MAX_EXPORT_ROWS = 100_000
+EXPORT_HEADERS = [
+    "Date", "Heure", "Adresse IP locale", "Nom d’hôte", "Domaine",
+    "Adresse IP distante", "Protocole", "Application",
+]
 
 
 class NavigationHistoryService:
@@ -18,6 +28,52 @@ class NavigationHistoryService:
 
     async def list(self, **filters: Any) -> tuple[list[NavigationHistory], int]:
         return await NavigationHistoryRepository(self.session).list(**filters)
+
+    async def export_rows(self, **filters: Any) -> AsyncIterator[NavigationHistory]:
+        repository = NavigationHistoryRepository(self.session)
+        result = await self.session.stream(
+            repository.filtered_query(**filters).limit(MAX_EXPORT_ROWS + 1)
+        )
+        count = 0
+        async for row in result.scalars():
+            count += 1
+            if count > MAX_EXPORT_ROWS:
+                raise ValueError("L’export dépasse la limite de 100 000 lignes.")
+            yield row
+
+    async def export_count(self, **filters: Any) -> int:
+        repository = NavigationHistoryRepository(self.session)
+        result = await self.session.execute(
+            select(func.count()).select_from(NavigationHistory).where(
+                *repository.build_filters(**filters)
+            )
+        )
+        return int(result.scalar_one())
+
+    async def export_xlsx(self, **filters: Any) -> bytes:
+        from openpyxl import Workbook
+
+        workbook = Workbook(write_only=True)
+        sheet = workbook.create_sheet("Historique")
+        sheet.append(EXPORT_HEADERS)
+        async for record in self.export_rows(**filters):
+            sheet.append(self.csv_row(record))
+        output = BytesIO()
+        workbook.save(output)
+        return output.getvalue()
+
+    @staticmethod
+    def csv_row(record: NavigationHistory) -> list[str]:
+        return [
+            record.timestamp.strftime("%Y-%m-%d"),
+            record.timestamp.strftime("%H:%M:%S"),
+            record.local_ip,
+            record.hostname or "",
+            record.domain,
+            record.remote_ip or "",
+            record.protocol or "",
+            record.application or "",
+        ]
 
     async def sync(self, interface_id: int, page_size: int = 500) -> int:
         _, response = await self.client.get_active_flows(interface_id, 1, page_size)

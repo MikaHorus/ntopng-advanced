@@ -26,6 +26,18 @@ export type NavigationHistoryResponse = {
   total_pages: number;
 };
 
+export type NavigationHistoryFilters = {
+  page: number;
+  pageSize: number;
+  localIp?: string;
+  domain?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  timeFrom?: string;
+  timeTo?: string;
+  search?: string;
+};
+
 const request = async <T>(path: string): Promise<T> => {
   const response = await fetch(path);
   if (!response.ok) {
@@ -52,15 +64,17 @@ export const getFlows = (interfaceId: number) =>
     `/api/v1/ntopng/flows?ifid=${interfaceId}&page=1&page_size=8`,
   );
 
-export const getNavigationHistory = (options: {
-  page: number;
-  pageSize: number;
-  search?: string;
-}) => {
+export const getNavigationHistory = (options: NavigationHistoryFilters) => {
   const params = new URLSearchParams({
     page: String(options.page),
     page_size: String(options.pageSize),
   });
+  if (options.localIp) params.set("local_ip", options.localIp);
+  if (options.domain) params.set("domain", options.domain);
+  if (options.dateFrom) params.set("date_from", options.dateFrom);
+  if (options.dateTo) params.set("date_to", options.dateTo);
+  if (options.timeFrom) params.set("time_from", options.timeFrom);
+  if (options.timeTo) params.set("time_to", options.timeTo);
   if (options.search) params.set("search", options.search);
   return request<NavigationHistoryResponse>(
     `/api/v1/navigation-history?${params.toString()}`,
