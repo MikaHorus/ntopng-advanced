@@ -3,6 +3,7 @@ from fastapi import FastAPI
 
 from app.api.v1.navigation_history import router as navigation_history_router
 from app.api.v1.ntopng import router as ntopng_router
+from app.api.v1.bandwidth import router as bandwidth_router
 from app.core.config import settings
 from app.db import SessionLocal
 from app.services.navigation_history_service import NavigationHistoryService
@@ -10,6 +11,7 @@ from app.clients.ntopng_client import NtopngClient
 
 app = FastAPI(title=settings.app_name, version="0.1.0")
 app.include_router(ntopng_router, prefix=settings.api_v1_prefix)
+app.include_router(bandwidth_router, prefix=settings.api_v1_prefix)
 app.include_router(navigation_history_router, prefix=settings.api_v1_prefix)
 scheduler = AsyncIOScheduler()
 

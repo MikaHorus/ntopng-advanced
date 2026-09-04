@@ -603,6 +603,23 @@ th {
 
 .page-panel { margin-top: 14px; }
 .page-header { margin-bottom: 16px; }
+.bandwidth-controls { display: flex; align-items: center; gap: 8px; }
+.bandwidth-controls select { border: 1px solid #d3e0e5; border-radius: 6px; padding: 9px 10px; color: #1f4d64; background: white; font-size: 12px; }
+.clickable-row { cursor: pointer; }
+.clickable-row:hover { background: #f4faf9; }
+.ip-link { border: 0; padding: 0; background: transparent; color: #1f7f83; cursor: pointer; font-family: 'DM Mono', monospace; text-decoration: underline; }
+.detail-metrics { grid-template-columns: repeat(3, 1fr); margin-top: 22px; }
+.device-meta { display: flex; gap: 18px; color: #76909e; font-size: 12px; margin-top: 10px; }
+.detail-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+.back-button { border: 0; background: transparent; color: #1f7f83; padding: 6px 0; cursor: pointer; font-size: 12px; }
+.data-note { color: #78909c; font-size: 11px; }
+.bandwidth-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 16px; color: #78909c; font-size: 11px; }
+.bandwidth-pagination button { border: 1px solid #d3e0e5; border-radius: 6px; background: white; padding: 7px 9px; color: #3e596c; cursor: pointer; }
+.bandwidth-pagination button:disabled { cursor: not-allowed; opacity: .45; }
+.domain-bars { display: grid; gap: 10px; margin-top: 18px; }
+.domain-bar { display: grid; grid-template-columns: minmax(140px, 1fr) auto; gap: 10px; position: relative; padding-bottom: 8px; color: #37566b; font-size: 12px; }
+.domain-bar strong { color: #1f7f83; font-family: 'DM Mono', monospace; font-size: 11px; }
+.domain-bar i { grid-column: 1 / -1; height: 5px; background: #36b5a5; border-radius: 3px; display: block; }
 
 @media (max-width: 950px) {
   .sidebar { width: 204px; }
@@ -651,4 +668,7 @@ th {
   .history-search input { width: 100%; }
   .history-pagination { flex-wrap: wrap; justify-content: flex-start; }
   .history-filter-panel { grid-template-columns: 1fr; }
+  .bandwidth-controls, .device-meta { align-items: stretch; flex-direction: column; }
+  .detail-metrics, .detail-columns { grid-template-columns: 1fr; }
+  .bandwidth-pagination { flex-wrap: wrap; justify-content: flex-start; }
 }

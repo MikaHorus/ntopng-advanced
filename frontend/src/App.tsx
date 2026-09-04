@@ -1,14 +1,16 @@
 import { Globe2, Menu, MonitorSmartphone, Network, Waypoints, CircleGauge, Database, ShieldCheck } from "lucide-react";
 import { useState } from "react";
-import { NavLink, Route, Routes } from "react-router-dom";
+import { NavLink, Route, Routes, useNavigate, useParams } from "react-router-dom";
 
 import ActiveFlows from "./ActiveFlows";
+import BandwidthConsumption, { DeviceBandwidthDetails } from "./BandwidthConsumption";
+import IpBandwidthDetails from "./IpBandwidthDetails";
 import Dashboard from "./Dashboard";
 import Domains from "./Domains";
 import Machines from "./Machines";
 import NavigationHistory from "./NavigationHistory";
 
-type View = "dashboard" | "history" | "machines" | "active-flows" | "domains";
+type View = "dashboard" | "history" | "machines" | "active-flows" | "domains" | "bandwidth-consumption";
 
 const navItems: Array<{ key: View; label: string; icon: typeof CircleGauge }> = [
   { key: "dashboard", label: "Dashboard", icon: CircleGauge },
@@ -16,6 +18,7 @@ const navItems: Array<{ key: View; label: string; icon: typeof CircleGauge }> = 
   { key: "machines", label: "Machines", icon: MonitorSmartphone },
   { key: "active-flows", label: "Flows actifs", icon: Waypoints },
   { key: "domains", label: "Domaines", icon: Globe2 },
+  { key: "bandwidth-consumption", label: "Consommation", icon: Waypoints },
 ];
 
 const App = () => {
@@ -61,11 +64,31 @@ const App = () => {
           <Route path="/machines" element={<Machines />} />
           <Route path="/active-flows" element={<ActiveFlows />} />
           <Route path="/domains" element={<Domains />} />
+          <Route path="/bandwidth-consumption" element={<BandwidthPage />} />
+          <Route path="/bandwidth-consumption/:deviceId" element={<BandwidthDevicePage />} />
+          <Route path="/bandwidth-consumption/ip/:localIp" element={<IpBandwidthPage />} />
         </Routes>
         <footer className="page-footer">Ntopng Advanced <span>•</span> données fournies par l’instance ntopng configurée</footer>
       </main>
     </div>
   );
+};
+
+const BandwidthPage = () => {
+  const navigate = useNavigate();
+  return <BandwidthConsumption onSelect={(localIp) => navigate(`/bandwidth-consumption/ip/${encodeURIComponent(localIp)}`)} />;
+};
+
+const IpBandwidthPage = () => {
+  const navigate = useNavigate();
+  const { localIp } = useParams();
+  return <IpBandwidthDetails localIp={decodeURIComponent(localIp ?? "")} onBack={() => navigate("/bandwidth-consumption")} />;
+};
+
+const BandwidthDevicePage = () => {
+  const navigate = useNavigate();
+  const { deviceId } = useParams();
+  return <DeviceBandwidthDetails deviceId={decodeURIComponent(deviceId ?? "")} onBack={() => navigate("/bandwidth-consumption")} />;
 };
 
 export default App;
